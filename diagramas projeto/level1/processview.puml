@@ -1,0 +1,41 @@
+@startuml VistaProcessos_SSD_Unificado
+title Vista de Processos\nSSD - Simulador de Casos Clínicos
+
+skinparam defaultFontName Arial
+skinparam participant {
+  BackgroundColor #76c7f5
+  BorderColor black
+}
+skinparam actor {
+  BackgroundColor transparent
+  BorderColor black
+}
+
+actor "Profissional de Saúde" as User
+participant "<<system (C4)>>\nSistema de Simulação Clínica" as Sistema
+participant "<<system>>\nServiços de IA (RAG)" as IA
+
+== SSD US1: Carregar Dados do Caso ==
+
+User -> Sistema : 1: carrega dados do caso clínico (id_caso)
+activate Sistema
+Sistema -> IA : 1.1: abrirConexaoBaseVetorial(id_caso)
+activate IA
+Sistema -> IA : 1.2: extrairContexto(...)
+deactivate IA
+Sistema -->> User : 1.3: dados do caso carregados
+deactivate Sistema
+
+== SSD US2: Iniciar Simulação ==
+
+User -> Sistema : 1: iniciar simulação
+activate Sistema
+Sistema -->> User : 1.1: introduz parâmetros (dificuldade/tempo)
+deactivate Sistema
+
+User -> Sistema : 2: dados da simulação
+activate Sistema
+Sistema -->> User : 2.1: simulação iniciada / erro nos dados
+deactivate Sistema
+
+@enduml

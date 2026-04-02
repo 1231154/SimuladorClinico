@@ -1,0 +1,36 @@
+@startuml ProcessView_Level1_ClinicalSim
+title Vista de Processos Nível 1 - Simulador de Casos Clínicos
+
+actor "Profissional de Saúde" as User
+participant "Web SPA\n(Frontend)" as Frontend
+participant "Motor de Simulação\n(Backend API)" as API
+
+== Iniciar Simulação ==
+User -> Frontend : Seleciona o Caso Clínico e clica "Iniciar"
+Frontend -> API : POST /api/simulations/start {case_id}
+API --> Frontend : HTTP 201 Created (Sessão Iniciada)
+Frontend --> User : Apresenta interface de chat e contexto inicial
+
+== Interagir no Chat (Paciente Virtual) ==
+User -> Frontend : Escreve e envia mensagem\n(ex: "Onde lhe dói?")
+Frontend -> API : POST /api/simulations/{session_id}/messages
+note right of API: O Backend orquestra a IA,\nmemória e RAG internamente.
+API --> Frontend : HTTP 200 OK (Resposta da IA gerada)
+Frontend --> User : Exibe a resposta do paciente virtual no chat
+
+== Consultar Informação Clínica Adicional ==
+User -> Frontend : Clica no separador "Ver Exames / Sinais Vitais"
+Frontend -> API : GET /api/simulations/{session_id}/clinical-data
+API --> Frontend : HTTP 200 OK (Dados parametrizados do caso)
+Frontend --> User : Mostra painel com exames do paciente
+
+== Terminar Simulação e Avaliação ==
+User -> Frontend : Clica em "Concluir Consulta"
+Frontend -> Frontend : Pede confirmação
+User -> Frontend : Confirma conclusão
+Frontend -> API : POST /api/simulations/{session_id}/evaluate
+note right of API: O Backend avalia o desempenho\ncom base no histórico.
+API --> Frontend : HTTP 200 OK (Relatório de feedback)
+Frontend --> User : Apresenta métricas de desempenho e feedback pedagógico
+
+@enduml

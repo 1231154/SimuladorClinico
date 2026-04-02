@@ -1,0 +1,48 @@
+@startuml VistaImplantacao_Localhost_Organizada
+title Vista de Implantação (Ambiente Localhost)\nSistema de Simulação Clínica AI
+
+skinparam linetype ortho
+skinparam defaultFontName Arial
+skinparam nodesep 100
+skinparam ranksep 100
+
+skinparam node {
+  BackgroundColor #76c7f5
+  BorderColor black
+}
+skinparam component {
+  BackgroundColor #76c7f5
+  BorderColor black
+}
+skinparam folder {
+  BackgroundColor #76c7f5
+  BorderColor black
+}
+
+node "localhost:??? (Browser)" as Cliente {
+  component "<<component>>\nNavegador Web" as Browser {
+    component "<<component>>\nInterface Web (SPA)" as UI_Client
+  }
+}
+
+node "localhost:??? (Frontend Dev Server)" as ServidorWeb {
+  component "<<component>>\nHTTP Server\n(ex: Node/Vite/Angular CLI)" as HTTPServer {
+    folder "Interface Web (UI)" as UI_Folder
+  }
+}
+
+node "localhost:??? (Backend Server)" as ServidorAPI {
+  component "<<component>>\nMotor de Simulação" as Motor
+  component "<<component>>\nMódulo RAG" as RAG
+  component "<<component>>\nServiços de IA" as IA
+  
+  Motor -down[hidden]- RAG
+  RAG -down[hidden]- IA
+}
+
+Cliente -down- ServidorWeb : HTTP (Carrega ficheiros)
+Cliente -down- ServidorAPI : HTTP/REST (API e WebSockets)
+
+ServidorWeb -right[hidden]- ServidorAPI
+
+@enduml

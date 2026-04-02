@@ -1,0 +1,37 @@
+@startuml VistaLogica_Nivel1
+title Vista Lógica - Nível 1\nSimulador de Casos Clínicos
+
+skinparam defaultFontName Arial
+skinparam componentStyle rectangle
+
+' Estilização baseada nas cores do teu exemplo
+skinparam interface {
+  BackgroundColor #76c7f5
+  BorderColor black
+}
+skinparam component {
+  BackgroundColor #76c7f5
+  BorderColor black
+  FontSize 16
+}
+
+' Interfaces de Utilizador (Topo)
+interface "UI Parceiro Clínico\n(Gestão de Casos)" as UI_Parceiro
+interface "UI Profissional de Saúde\n(Chat de Simulação)" as UI_Profissional
+interface "UI Avaliador\n(Relatórios e Métricas)" as UI_Avaliador
+
+' Sistema Central (Meio)
+component "<<component>>\n<<system (C4)>>\nSistema de Simulação Clínica" as Sistema
+
+' APIs e Serviços Externos (Fundo)
+interface "API de Serviços de IA (LLM)\n& Conhecimento Clínico (RAG)" as API_Externa
+
+' Ligações
+UI_Parceiro ---> Sistema : Utiliza
+UI_Profissional ---> Sistema : Utiliza
+UI_Avaliador ---> Sistema : Utiliza
+
+' Ligação do tipo "Requer" (cria o semi-círculo no fundo)
+Sistema --( API_Externa : Consome
+
+@enduml

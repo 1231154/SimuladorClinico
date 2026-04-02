@@ -1,0 +1,35 @@
+@startuml VistaImplementacao_Simulacao_Limpa
+title Vista de Implementação\nSistema de Simulação Clínica AI
+
+skinparam linetype ortho
+skinparam defaultFontName Arial
+skinparam packageStyle folder 
+skinparam nodesep 80
+skinparam ranksep 80
+
+skinparam package {
+  BackgroundColor #76c7f5
+  BorderColor black
+  FontSize 14
+}
+
+package "Sistema de Simulação Clínica AI" {
+
+  package "Interface Web (UI)" as UI
+  package "Backend Core" as Backend
+  package "Módulo RAG" as RAG
+  package "Serviços de IA" as IA
+
+  Backend -down[hidden]- RAG
+  RAG -down[hidden]- IA
+
+
+  UI .right.> Backend
+  UI .right.> RAG
+  UI .right.> IA
+
+  Backend .down.> RAG
+  RAG .down.> IA
+}
+
+@enduml

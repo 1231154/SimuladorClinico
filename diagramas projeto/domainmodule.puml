@@ -1,0 +1,75 @@
+@startuml ModeloDominio_Formalizacao_Simples
+title Modelo de Domínio\nSimulador de Casos Clínicos
+
+skinparam class {
+  BackgroundColor #e6f3ff
+  ArrowColor #2c5aa0
+  BorderColor #2c5aa0
+}
+' Diminui o tamanho da letra especificamente para as setas (verbos)
+skinparam arrowFontSize 11
+skinparam defaultFontName Arial
+hide circle
+
+' --- Entidades identificadas na Formalização ---
+
+class "ProfissionalDeSaude" as Profissional {
+  identificacao
+  nivelExperiencia
+}
+
+class "CasoClinico" as Caso {
+  conhecimentoDescritivo
+  sintomas
+  restricoes
+  validacaoClinica
+}
+
+class "SessaoDeSimulacao" as Sessao {
+  dataInicio
+  dataFim
+  estado
+}
+
+class "PacienteVirtual" as Paciente {
+  cenarioDinamicoAtual
+}
+
+class "InteracaoChat" as Interacao {
+  remetente (Profissional ou LLM)
+  textoDaMensagem
+  timestamp
+}
+
+class "Avaliacao" as Avaliacao {
+  rigorCientifico
+  coerenciaSintomas
+  grauDeRealismo
+  maisValiaPedagogica
+}
+
+' --- Relações Simplificadas ---
+
+Profissional "1" -- "*" Sessao : inicia >
+Caso "1" -- "*" Sessao : baseia >
+Caso "1" -- "1" Paciente : define >
+Sessao "1" *-- "1" Paciente : inclui >
+Sessao "1" *-- "*" Interacao : contém >
+Sessao "1" -- "0..1" Avaliacao : gera >
+
+note top of Profissional
+  O utilizador-alvo do sistema
+  que está em treino.
+end note
+
+note top of Caso
+  Fornecido pelos parceiros clínicos
+  com casos reais.
+end note
+
+note right of Interacao
+  As perguntas do profissional
+  e as respostas do LLM.
+end note
+
+@enduml
