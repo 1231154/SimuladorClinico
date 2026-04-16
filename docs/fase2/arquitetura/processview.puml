@@ -1,0 +1,46 @@
+@startuml Fase2_VistaProcessos
+
+title Fase 2 - Vista de Processos (Sequencia Principal)
+
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+
+actor "Profissional de Saude" as User
+participant "Web SPA" as SPA
+participant "Simulacoes API" as API
+participant "SimulacaoService" as SERVICE
+participant "LLM Adapter" as LLM
+
+== 1. Iniciar Sessao ==
+User -> SPA : seleciona caso e inicia simulacao
+SPA -> API : POST /api/simulacoes/sessoes
+API -> SERVICE : IniciarSessaoAsync(casoId)
+SERVICE --> API : sessao criada
+API --> SPA : 201 Created + sessao
+
+== 2. Conversa Clinica ==
+loop Enquanto sessao ativa
+  User -> SPA : envia pergunta ao paciente virtual
+  SPA -> API : POST /api/simulacoes/sessoes/{sessaoId}/mensagens
+  API -> SERVICE : ProcessarNovaMensagemAsync()
+  SERVICE -> LLM : gerar resposta contextualizada
+  LLM --> SERVICE : resposta do paciente virtual
+  SERVICE --> API : interacoes atualizadas
+  API --> SPA : 200 OK + resposta da IA
+end
+
+== 3. Consulta de Estado ==
+SPA -> API : GET /api/simulacoes/sessoes/{sessaoId}
+API -> SERVICE : ObterSessaoPorIdAsync()
+SERVICE --> API : estado da sessao
+API --> SPA : 200 OK + historico
+
+== 4. Conclusao e Avaliacao ==
+User -> SPA : conclui simulacao
+SPA -> API : POST /api/simulacoes/sessoes/{sessaoId}/concluir
+API -> SERVICE : ConcluirSessaoAsync()
+SERVICE --> API : sessao finalizada + avaliacao
+API --> SPA : 200 OK
+SPA --> User : apresenta feedback final
+
+@enduml

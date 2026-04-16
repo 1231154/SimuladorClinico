@@ -9,10 +9,8 @@ public class SessaoDeSimulacao
     public DateTime? DataFim { get; set; }
     public EstadoSessaoDeSimulacao Estado { get; set; }
 
-    public Guid ProfissionalId { get; set; }
     public Guid CasoId { get; set; }
 
-    public ProfissionalDeSaude Profissional { get; set; } = null!;
     public CasoClinico Caso { get; set; } = null!;
 
     public ICollection<InteracaoChat> InteracoesChat { get; set; } = new List<InteracaoChat>();

@@ -23,22 +23,16 @@ component "<<system (C4)>>\nSistema de Simulação Clínica AI" as Sistema {
   component "<<container (C4)>>\nInterface Web (SPA)" as SPA
   component "<<container (C4)>>\nBackend API\n(Orquestrador)" as Backend
   component "<<container (C4)>>\nBase de Dados\nVetorial (RAG)" as VectorDB
-  component "<<container (C4)>>\nBase de Dados\n(Relacional)" as DB
-
   
   interface "API REST" as API_Backend
   interface "Vector API" as API_Vector
-  interface "DB API" as API_DB
-
   
   API_Backend - Backend
   API_Vector - VectorDB
-  API_DB - DB
 
   
   SPA -right( API_Backend
   Backend -right( API_Vector
-  Backend -down( API_DB
 }
 
 interface "API do LLM" as API_LLM

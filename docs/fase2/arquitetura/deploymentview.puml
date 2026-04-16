@@ -1,0 +1,37 @@
+@startuml Fase2_VistaImplantacao
+
+title Fase 2 - Vista de Implantacao (Ambiente Desenvolvimento)
+
+skinparam defaultFontName Arial
+skinparam linetype ortho
+
+node "Maquina Local do Utilizador" as Host {
+
+  node "Browser\nlocalhost:5173" as Browser {
+    component "SPA React" as Client
+  }
+
+  node "Frontend Dev Server\nVite" as Frontend {
+    component "Servidor estatico + HMR" as Vite
+  }
+
+  node "Backend Server\nASP.NET Core" as Backend {
+    component "SimuladorClinico.Api" as ApiProc
+    component "Application + Domain" as Core
+    component "In-Memory Session Store" as MemStore
+  }
+}
+
+cloud "Servico LLM Externo" as LlmCloud
+
+Client --> Vite : carrega aplicacao
+Client --> ApiProc : chamadas REST /api/simulacoes/*
+ApiProc --> Core : fluxo de simulacao
+Core --> MemStore : persistencia temporaria
+Core --> LlmCloud : inferencia de respostas
+
+note bottom of Backend
+Em producao, substituir in-memory store por persistencia duravel.
+end note
+
+@enduml

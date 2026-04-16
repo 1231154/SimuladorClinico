@@ -45,8 +45,31 @@ public class SimulacoesController : ControllerBase
 
     [HttpGet("sessoes/{sessaoId:guid}", Name = "ObterSessaoPorId")]
     [ProducesResponseType(typeof(SessaoDeSimulacaoDto), StatusCodes.Status200OK)]
-    public ActionResult<SessaoDeSimulacaoDto> ObterSessaoPorIdAsync([FromRoute] Guid sessaoId)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SessaoDeSimulacaoDto>> ObterSessaoPorIdAsync([FromRoute] Guid sessaoId, CancellationToken cancellationToken)
     {
-        return Ok(new SessaoDeSimulacaoDto { Id = sessaoId });
+        var sessao = await _simulacaoService.ObterSessaoPorIdAsync(sessaoId, cancellationToken);
+
+        if (sessao is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(sessao);
+    }
+
+    [HttpPost("sessoes/{sessaoId:guid}/concluir")]
+    [ProducesResponseType(typeof(SessaoDeSimulacaoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SessaoDeSimulacaoDto>> ConcluirSessaoAsync([FromRoute] Guid sessaoId, CancellationToken cancellationToken)
+    {
+        var sessao = await _simulacaoService.ConcluirSessaoAsync(sessaoId, cancellationToken);
+
+        if (sessao is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(sessao);
     }
 }

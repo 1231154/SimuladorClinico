@@ -8,7 +8,6 @@ public sealed class SessaoDeSimulacaoDto
     public DateTime DataInicio { get; init; }
     public DateTime? DataFim { get; init; }
     public EstadoSessaoDeSimulacao Estado { get; init; }
-    public Guid ProfissionalId { get; init; }
     public Guid CasoId { get; init; }
     public IReadOnlyCollection<InteracaoChatDto> Interacoes { get; init; } = [];
     public AvaliacaoDto? Avaliacao { get; init; }

@@ -1,6 +1,6 @@
 # Guia de Testes no Postman
 
-Este guia esta alinhado com o estado atual do backend. A API ja sobe, o controller existe e o `ISimulacaoService` esta ligado com implementacao em memoria, por isso ja consegues testar o fluxo basico no Postman.
+Este guia esta alinhado com o estado atual do backend em modo anonimo. Nao existe login de profissional de saude e o fluxo principal e: criar sessao, conversar e concluir para obter feedback do momento.
 
 ## 1) Arrancar a API
 
@@ -21,7 +21,6 @@ Cria um Environment chamado `Local` com estas variaveis:
 
 Opcionalmente podes criar tambem:
 
-- `profissionalId = 11111111-1111-1111-1111-111111111111`
 - `casoId = 22222222-2222-2222-2222-222222222222`
 
 Estes valores sao GUIDs validos e servem para teste. Nao uses textos como `abc` ou `123`, porque o backend espera mesmo `Guid`.
@@ -34,23 +33,30 @@ Testa nesta sequencia para nao te perderes:
 2. Criar uma sessao.
 3. Guardar o `id` da sessao.
 4. Enviar uma mensagem para essa sessao.
-5. Obter a sessao pelo `id`.
+5. Concluir a sessao para gerar feedback.
+6. Obter a sessao pelo `id`.
 
 ## 4) Requests para testar agora
 
-## 4.1 Swagger
+## 4.1 Health
+
+- Metodo: `GET`
+- URL: `{{baseUrl}}/health`
+- Esperado: `200 OK` com JSON `{ "status": "ok" }`.
+
+## 4.2 Swagger
 
 - Metodo: `GET`
 - URL: `{{baseUrl}}/swagger`
 - Esperado: o browser abre o Swagger UI. No Postman vais receber HTML, o que e normal.
 
-## 4.2 Rota invalida
+## 4.3 Rota invalida
 
 - Metodo: `GET`
 - URL: `{{baseUrl}}/api/nao-existe`
 - Esperado: `404 Not Found`.
 
-## 4.3 Criar sessao
+## 4.4 Criar sessao
 
 - Metodo: `POST`
 - URL: `{{baseUrl}}/api/simulacoes/sessoes`
@@ -64,7 +70,6 @@ O body tem de ser o objeto diretamente. Nao metas um wrapper tipo `{"request": {
 
 ```json
 {
-  "profissionalId": "{{profissionalId}}",
   "casoId": "{{casoId}}"
 }
 ```
@@ -73,7 +78,6 @@ Exemplo literal valido, para colares diretamente no Postman sem variaveis:
 
 ```json
 {
-  "profissionalId": "11111111-1111-1111-1111-111111111111",
   "casoId": "22222222-2222-2222-2222-222222222222"
 }
 ```
@@ -90,7 +94,6 @@ Exemplo literal valido, para colares diretamente no Postman sem variaveis:
     "dataInicio": "...",
     "dataFim": null,
     "estado": 1,
-    "profissionalId": "11111111-1111-1111-1111-111111111111",
     "casoId": "22222222-2222-2222-2222-222222222222",
     "interacoes": [],
     "avaliacao": null
@@ -103,7 +106,7 @@ Exemplo literal valido, para colares diretamente no Postman sem variaveis:
 - Copia o `id` devolvido.
 - Guarda-o em `sessaoId` no Environment.
 
-## 4.4 Enviar mensagem para a sessao
+## 4.5 Enviar mensagem para a sessao
 
 - Metodo: `POST`
 - URL: `{{baseUrl}}/api/simulacoes/sessoes/{{sessaoId}}/mensagens`
@@ -135,7 +138,7 @@ Exemplo literal valido:
 
 - `200 OK`
 - Resposta com duas mensagens:
-  - a mensagem do profissional
+  - a mensagem do utilizador
   - a resposta simulada da IA
 
 Exemplo de estrutura:
@@ -158,7 +161,52 @@ Exemplo de estrutura:
 }
 ```
 
-## 4.5 Obter sessao por id
+## 4.6 Concluir sessao e gerar feedback
+
+- Metodo: `POST`
+- URL: `{{baseUrl}}/api/simulacoes/sessoes/{{sessaoId}}/concluir`
+
+### O que deves esperar
+
+- `200 OK`
+- A sessao passa para `estado = 3` (Finalizada)
+- `dataFim` preenchida
+- `avaliacao` preenchida com pontuacoes desta sessao
+
+Exemplo de estrutura:
+
+```json
+{
+  "id": "...",
+  "dataInicio": "...",
+  "dataFim": "...",
+  "estado": 3,
+  "casoId": "22222222-2222-2222-2222-222222222222",
+  "interacoes": [
+    {
+      "id": "...",
+      "remetente": 1,
+      "textoDaMensagem": "...",
+      "timestamp": "..."
+    },
+    {
+      "id": "...",
+      "remetente": 2,
+      "textoDaMensagem": "...",
+      "timestamp": "..."
+    }
+  ],
+  "avaliacao": {
+    "id": "...",
+    "rigorCientifico": 80,
+    "coerenciaSintomas": 74,
+    "grauDeRealismo": 70,
+    "maisValiaPedagogica": 78
+  }
+}
+```
+
+## 4.7 Obter sessao por id
 
 - Metodo: `GET`
 - URL: `{{baseUrl}}/api/simulacoes/sessoes/{{sessaoId}}`
@@ -168,35 +216,40 @@ Tambem depende de `sessaoId` estar preenchido. Sem isso, o request nao represent
 ### O que deves esperar
 
 - `200 OK`
-- Neste momento o endpoint devolve apenas:
+- O endpoint devolve a sessao com estado atual, interacoes e avaliacao (se ja tiver sido concluida):
 
 ```json
 {
   "id": "{{sessaoId}}",
-  "dataInicio": "0001-01-01T00:00:00",
+  "dataInicio": "...",
   "dataFim": null,
-  "estado": 0,
-  "profissionalId": "00000000-0000-0000-0000-000000000000",
-  "casoId": "00000000-0000-0000-0000-000000000000",
-  "interacoes": [],
+  "estado": 2,
+  "casoId": "22222222-2222-2222-2222-222222222222",
+  "interacoes": [
+    {
+      "id": "...",
+      "remetente": 1,
+      "textoDaMensagem": "...",
+      "timestamp": "..."
+    }
+  ],
   "avaliacao": null
 }
 ```
-
-Isto ainda e um retorno minimo do scaffold. Mais tarde este endpoint deve passar a ler os dados reais da base de dados.
 
 ## 5) Como validar se esta a funcionar bem
 
 - A API abre sem excecao no terminal.
 - O `POST /api/simulacoes/sessoes` devolve `201`.
 - O `POST /api/simulacoes/sessoes/{sessaoId}/mensagens` devolve `200`.
+- O `POST /api/simulacoes/sessoes/{sessaoId}/concluir` devolve `200` e avaliacao.
 - O `GET /api/simulacoes/sessoes/{sessaoId}` devolve `200`.
 - O `GET /api/nao-existe` devolve `404` de forma esperada.
 - Nenhum pedido devolve `500`.
 
 Se aparece `The request field is required`, significa que o Postman nao esta a enviar o body como JSON no formato esperado.
 
-Se aparece `The JSON value could not be converted to System.Guid`, significa que o valor de `profissionalId`, `casoId` ou `sessaoId` nao e um GUID valido.
+Se aparece `The JSON value could not be converted to System.Guid`, significa que o valor de `casoId` ou `sessaoId` nao e um GUID valido.
 
 ## 6) Erros mais comuns e o que significam
 
@@ -229,11 +282,13 @@ Nome da colecao: `SimuladorClinico API`
 
 Requests:
 
-1. `GET Swagger`
-2. `POST Criar Sessao`
-3. `POST Enviar Mensagem`
-4. `GET Obter Sessao`
-5. `GET Rota Inexistente`
+1. `GET Health`
+2. `GET Swagger`
+3. `POST Criar Sessao`
+4. `POST Enviar Mensagem`
+5. `POST Concluir Sessao`
+6. `GET Obter Sessao`
+7. `GET Rota Inexistente`
 
 Se quiseres importar logo tudo pronto, usa estes ficheiros:
 
@@ -249,7 +304,7 @@ Ordem recomendada de importacao no Postman:
 
 ## 8) Dica importante
 
-Se o `POST Criar Sessao` funcionar, mas o `POST Enviar Mensagem` falhar com `Sessao nao encontrada`, significa que nao copiaste o `id` certo para a variavel `sessaoId`.
+Se o `POST Criar Sessao` funcionar, mas o `POST Enviar Mensagem` ou `POST Concluir Sessao` falhar com `Sessao nao encontrada`, significa que nao copiaste o `id` certo para a variavel `sessaoId`.
 
 O fluxo correto e sempre:
 
@@ -257,5 +312,6 @@ O fluxo correto e sempre:
 2. copiar o `id`
 3. colar em `sessaoId`
 4. enviar mensagem
+5. concluir sessao
 
 Se estiveres a usar a collection importada, esta parte fica automatizada porque o request `POST Criar Sessao` grava o `sessaoId` no environment.

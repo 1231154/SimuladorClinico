@@ -11,7 +11,6 @@ public class SimuladorClinicoDbContext : DbContext, IUnitOfWork
     {
     }
 
-    public DbSet<ProfissionalDeSaude> ProfissionaisDeSaude => Set<ProfissionalDeSaude>();
     public DbSet<CasoClinico> CasosClinicos => Set<CasoClinico>();
     public DbSet<SessaoDeSimulacao> SessoesDeSimulacao => Set<SessaoDeSimulacao>();
     public DbSet<InteracaoChat> InteracoesChat => Set<InteracaoChat>();
@@ -20,13 +19,6 @@ public class SimuladorClinicoDbContext : DbContext, IUnitOfWork
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<ProfissionalDeSaude>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Identificacao).HasMaxLength(200).IsRequired();
-            entity.Property(e => e.NivelExperiencia).IsRequired();
-        });
 
         modelBuilder.Entity<CasoClinico>(entity =>
         {
@@ -42,11 +34,6 @@ public class SimuladorClinicoDbContext : DbContext, IUnitOfWork
             entity.HasKey(e => e.Id);
             entity.Property(e => e.DataInicio).IsRequired();
             entity.Property(e => e.Estado).IsRequired();
-
-            entity.HasOne(e => e.Profissional)
-                .WithMany(p => p.SessoesDeSimulacao)
-                .HasForeignKey(e => e.ProfissionalId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Caso)
                 .WithMany(c => c.SessoesDeSimulacao)
