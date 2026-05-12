@@ -1,37 +1,30 @@
 @startuml Fase2_VistaImplantacao
 
-title Fase 2 - Vista de Implantacao (Ambiente Desenvolvimento)
+title Vista de Implantacao - Ambiente Local
 
 skinparam defaultFontName Arial
 skinparam linetype ortho
 
-node "Maquina Local do Utilizador" as Host {
-
-  node "Browser\nlocalhost:5173" as Browser {
-    component "SPA React" as Client
-  }
-
-  node "Frontend Dev Server\nVite" as Frontend {
-    component "Servidor estatico + HMR" as Vite
-  }
-
-  node "Backend Server\nASP.NET Core" as Backend {
-    component "SimuladorClinico.Api" as ApiProc
-    component "Application + Domain" as Core
-    component "In-Memory Session Store" as MemStore
-  }
+node "Cliente" {
+  component "Web Browser\n(React + TypeScript)" as Frontend
 }
 
-cloud "Servico LLM Externo" as LlmCloud
+node "Servidor Backend" {
+  component "ASP.NET Core API\n(SimulacoesController)" as API
+  component "SimulacaoService\n(Logica de Negocio)" as Service
+  component "Memory Store\n(ConcurrentDictionary)" as Store
+}
 
-Client --> Vite : carrega aplicacao
-Client --> ApiProc : chamadas REST /api/simulacoes/*
-ApiProc --> Core : fluxo de simulacao
-Core --> MemStore : persistencia temporaria
-Core --> LlmCloud : inferencia de respostas
+node "Servicos Externos" {
+  component "Ollama Local\n(Mistral 7B)" as Ollama
+  component "Python AI Service\n(Opcional)" as Python
+}
 
-note bottom of Backend
-Em producao, substituir in-memory store por persistencia duravel.
-end note
+Frontend -down-> API: HTTP REST\n[:5173] -> [:5070]
+
+API -down-> Service: chamar
+Service -down-> Store: persistir sessoes
+Service -right-> Ollama: gerar resposta\n[:11434]
+Ollama -.-> Python: \n[:5555]
 
 @enduml

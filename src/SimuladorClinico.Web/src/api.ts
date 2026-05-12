@@ -5,7 +5,8 @@ import type {
   SessaoDeSimulacaoDto
 } from './types';
 
-const apiBaseUrl = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:5070').replace(/\/+$/, '');
+// Use relative URLs so Vite proxy can intercept them
+const apiBaseUrl = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '').replace(/\/+$/, '');
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {

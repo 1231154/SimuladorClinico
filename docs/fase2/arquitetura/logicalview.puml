@@ -10,25 +10,25 @@ skinparam maxMessageSize 200
 actor "Profissional de Saude" as User
 
 rectangle "Simulador Clinico" {
-  component "Web SPA\n(Vite + React + TypeScript)" as SPA
-  component "API REST\n(ASP.NET Core)" as API
-  component "Application Layer\nServicos e DTOs" as APP
-  component "Domain Layer\nEntidades e Regras" as DOMAIN
-  component "Infrastructure\nPersistencia e Integracoes" as INFRA
-  database "Armazenamento de Sessao\n(In-Memory - fase atual)" as STORE
+  component "Web SPA\n(SimuladorClinico.Web)" as SPA
+  component "API REST\n(SimuladorClinico.Api)" as API
+  component "Application Layer\n(ISimulacaoService, DTOs, orquestracao)" as APP
+  component "Domain Layer\n(Entidades, Enums, regras)" as DOMAIN
+  component "Infrastructure\n(IChatModelService, Knowledge, persistencia)" as INFRA
+  database "Sessoes em memoria\nConcurrentDictionary" as STORE
 }
 
-cloud "LLM Provider\n(OpenAI/Azure OpenAI)" as LLM
-cloud "Base de Conhecimento Clinico\n(RAG - fase seguinte)" as RAG
+cloud "Ollama local\n(mistral:latest)" as LLM
+cloud "Python AI Service\n(FastAPI)" as PYAI
 
 User --> SPA : interage com chat e simulacao
 SPA --> API : HTTPS JSON
-API --> APP : chamadas de caso de uso
+API --> APP : chamadas de casos de uso
 APP --> DOMAIN : aplica regras de negocio
-APP --> INFRA : contratos de repositorio/servico
-INFRA --> STORE : guarda e le sessoes
-APP --> LLM : gera resposta clinica (adapter)
-APP --> RAG : recupera contexto clinico (adapter)
+APP --> INFRA : resolve dependencias
+INFRA --> STORE : guarda as sessoes
+INFRA --> LLM : gera resposta do paciente
+INFRA ..> PYAI : integracao alternativa / futura
 
 note right of APP
 Orquestracao principal da simulacao:
@@ -37,5 +37,6 @@ Orquestracao principal da simulacao:
 - Obter estado da sessao
 - Concluir e avaliar
 end note
+
 
 @enduml

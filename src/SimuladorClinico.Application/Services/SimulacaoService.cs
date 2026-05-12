@@ -8,6 +8,12 @@ namespace SimuladorClinico.Application.Services;
 
 public sealed class SimulacaoService : ISimulacaoService
 {
+    private readonly IChatModelService _chatModelService;
+
+    public SimulacaoService(IChatModelService chatModelService)
+    {
+        _chatModelService = chatModelService;
+    }
     private static readonly ConcurrentDictionary<Guid, SessaoDeSimulacaoDto> Sessoes = new();
 
     private static int NormalizarPontuacao(int valor) => Math.Clamp(valor, 0, 100);
@@ -48,7 +54,7 @@ public sealed class SimulacaoService : ISimulacaoService
         });
     }
 
-    public Task<ProcessarNovaMensagemResponseDto> ProcessarNovaMensagemAsync(
+    public async Task<ProcessarNovaMensagemResponseDto> ProcessarNovaMensagemAsync(
         ProcessarNovaMensagemRequestDto request,
         CancellationToken cancellationToken = default)
     {
@@ -65,11 +71,14 @@ public sealed class SimulacaoService : ISimulacaoService
             Timestamp = DateTime.UtcNow
         };
 
+        // Chamada ao serviço LLM (Ollama ou mock)
+        var textoResposta = await _chatModelService.GerarRespostaAsync(request.SessaoId, request.TextoDaMensagem, cancellationToken);
+
         var respostaIa = new InteracaoChatDto
         {
             Id = Guid.NewGuid(),
             Remetente = RemetenteInteracao.IA,
-            TextoDaMensagem = "Resposta simulada da IA. A integracao real com o modelo sera adicionada numa fase posterior.",
+            TextoDaMensagem = textoResposta,
             Timestamp = DateTime.UtcNow
         };
 
@@ -90,12 +99,12 @@ public sealed class SimulacaoService : ISimulacaoService
 
         Sessoes[request.SessaoId] = sessaoAtualizada;
 
-        return Task.FromResult(new ProcessarNovaMensagemResponseDto
+        return new ProcessarNovaMensagemResponseDto
         {
             SessaoId = request.SessaoId,
             MensagemProfissional = mensagemProfissional,
             RespostaIa = respostaIa
-        });
+        };
     }
 
     public Task<SessaoDeSimulacaoDto?> ObterSessaoPorIdAsync(Guid sessaoId, CancellationToken cancellationToken = default)

@@ -1,3 +1,7 @@
+using SimuladorClinico.Application.Contracts.Services;
+using SimuladorClinico.Infrastructure.Services;
+using SimuladorClinico.Infrastructure.Knowledge;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +21,34 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+// Registrar serviço de LLM (Python AI por omissão, ou mock)
+var useMock = string.Equals(Environment.GetEnvironmentVariable("USE_MOCK_OLLAMA"), "true", StringComparison.OrdinalIgnoreCase);
+var usePythonAi = string.Equals(Environment.GetEnvironmentVariable("USE_PYTHON_AI_SERVICE") ?? "true", "true", StringComparison.OrdinalIgnoreCase);
+if (useMock)
+{
+    builder.Services.AddSingleton<IChatModelService, MockChatModelService>();
+}
+else if (usePythonAi)
+{
+    builder.Services.AddHttpClient<IChatModelService, PythonAIServiceClient>(client =>
+    {
+        var timeoutSec = int.TryParse(Environment.GetEnvironmentVariable("PYTHON_AI_TIMEOUT"), out var t) ? t : 120;
+        client.Timeout = TimeSpan.FromSeconds(timeoutSec);
+    });
+}
+else
+{
+    // Registar HttpClient-based implementation. Timeout configurable via OLLAMA_TIMEOUT (segundos)
+    builder.Services.AddHttpClient<IChatModelService, OllamaChatModelService>(client =>
+    {
+        var timeoutSec = int.TryParse(Environment.GetEnvironmentVariable("OLLAMA_TIMEOUT"), out var t) ? t : 60;
+        client.Timeout = TimeSpan.FromSeconds(timeoutSec);
+    });
+}
+
+// Registrar serviço de conhecimento (leitura de ficheiros) para futuras integrações RAG
+builder.Services.AddSingleton<IKnowledgeService, FileKnowledgeService>();
+
 builder.Services.AddScoped<SimuladorClinico.Application.Contracts.Services.ISimulacaoService, SimuladorClinico.Application.Services.SimulacaoService>();
 
 var app = builder.Build();
