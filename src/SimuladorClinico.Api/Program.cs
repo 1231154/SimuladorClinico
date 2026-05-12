@@ -53,6 +53,11 @@ builder.Services.AddScoped<SimuladorClinico.Application.Contracts.Services.ISimu
 
 var app = builder.Build();
 
+var runningInContainer = string.Equals(
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -62,7 +67,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("FrontendDev");
 
-if (!app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment() && !runningInContainer)
 {
     app.UseHttpsRedirection();
 }

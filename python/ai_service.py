@@ -22,24 +22,40 @@ load_dotenv(Path(__file__).with_name(".env"))
 
 logger = logging.getLogger(__name__)
 
+def _load_mental_health_data() -> List[Dict]:
+    """Load mental_health_data.py from the configured knowledge path."""
+    candidates = []
+
+    env_knowledge_path = os.getenv("KNOWLEDGE_PATH")
+    if env_knowledge_path:
+        candidates.append(Path(env_knowledge_path))
+
+    candidates.append(Path(__file__).parent.parent / "docs" / "knowledge")
+
+    for base_path in candidates:
+        data_file = base_path / "mental_health_data.py"
+        if not data_file.is_file():
+            continue
+
+        try:
+            content = data_file.read_text(encoding="utf-8")
+            # Replace standalone 'nan' with 'None' (handles: nan, followed by comma or closing bracket)
+            content = content.replace(": nan,", ": None,").replace(": nan\n", ": None\n")
+
+            namespace = {}
+            exec(content, namespace)
+            cases = namespace.get("mental_health_data", [])
+            logger.info(f" Loaded {len(cases)} clinical cases from {data_file}")
+            return cases
+        except Exception as e:
+            logger.warning(f" Could not load mental_health_data from {data_file}: {e}")
+
+    logger.warning(" Could not load mental_health_data from any configured knowledge path")
+    return []
+
+
 # Import knowledge data from Python module
-# Load mental_health_data and replace nan (Not Available) with None
-mental_health_data = []
-try:
-    sys.path.insert(0, str(Path(__file__).parent.parent / "docs" / "knowledge"))
-    # Read the file and replace 'nan' with 'None' before executing
-    with open(Path(__file__).parent.parent / "docs" / "knowledge" / "mental_health_data.py", "r") as f:
-        content = f.read()
-    # Replace standalone 'nan' with 'None' (handles: nan, followed by comma or closing bracket)
-    content = content.replace(": nan,", ": None,").replace(": nan\n", ": None\n")
-    # Execute in a clean namespace
-    namespace = {}
-    exec(content, namespace)
-    mental_health_data = namespace.get("mental_health_data", [])
-    logger.info(f" Loaded {len(mental_health_data)} clinical cases from mental_health_data.py")
-except Exception as e:
-    logger.warning(f" Could not load mental_health_data: {e}")
-    mental_health_data = []
+mental_health_data = _load_mental_health_data()
 
 
 class AIService:

@@ -1,0 +1,58 @@
+services:
+
+  # ── LLM ──────────────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama   # bind mount — modelos ficam na pasta local
+    # Após o primeiro `docker compose up`, puxa o modelo uma vez:
+    #   docker compose exec ollama ollama pull mistral:latest
+
+  # ── AI Service (Python / FastAPI) ─────────────────────────────────────
+  python-ai:
+    build:
+      context: ./python
+    ports:
+      - "5555:5555"
+    environment:
+      OLLAMA_HOST: http://ollama:11434   # URL do LLM
+      OLLAMA_MODEL: mistral:latest       # modelo a usar
+      KNOWLEDGE_PATH: /knowledge         # path dentro do container
+      USE_KNOWLEDGE: "true"
+      PYTHON_AI_HOST: "0.0.0.0"
+      PYTHON_AI_PORT: "5555"
+      ENVIRONMENT: production
+    volumes:
+      - ./docs/knowledge:/knowledge:ro   # bind mount da pasta real
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # ── Backend (.NET 8) ─────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: src/SimuladorClinico.Api/Dockerfile
+    ports:
+      - "5070:5070"
+    environment:
+      ASPNETCORE_URLS: http://+:5070
+      ASPNETCORE_ENVIRONMENT: Production
+      USE_PYTHON_AI_SERVICE: "true"
+      PYTHON_AI_HOST: http://python-ai:5555
+      PYTHON_AI_TIMEOUT: "120"
+    depends_on:
+      - python-ai
+    restart: unless-stopped
+
+  # ── Frontend (React + nginx) ──────────────────────────────────────────
+  frontend:
+    build:
+      context: ./src/SimuladorClinico.Web
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
